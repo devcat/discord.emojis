@@ -6,7 +6,7 @@ async function main() {
   const emojis = readFileSync('./dist/emojis.json').toString();
   const prev = JSON.parse(readFileSync('./dist/metadata.json').toString());
 
-  const discord_html = await fetch('https://discord.com/channels/@me');
+  const discord_html = await fetch('https://canary.discord.com/channels/@me');
   const updated = await find(emojis, prev.hash, discord_html.toString());
   
   if (!updated) process.exit(0);
@@ -41,7 +41,7 @@ const INLINED_EMOJIS_JSON = /JSON.parse\('({"people":[^']+})'\)}/;
 async function find(old, hash, html) {
   for (const [, asset] of html.matchAll(JS_ASSET)) {
     if (hash === asset) return null;
-    html = await fetch(`https://discord.com/assets/${asset}`);
+    html = await fetch(`https://canary.discord.com/assets/${asset}`);
 
     html = html.toString();
     const g = html.match(INLINED_EMOJIS_JSON);

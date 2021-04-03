@@ -3,13 +3,14 @@ const { execSync } = require('child_process');
 const { readFileSync, writeFileSync } = require('fs');
 
 async function main() {
-  const emojis = readFileSync('./dist/emojis.json').toString();
+  const old = readFileSync('./dist/emojis.json').toString();
   const prev = JSON.parse(readFileSync('./dist/metadata.json').toString());
-
   const discord_html = await fetch('https://canary.discord.com/channels/@me');
-  const updated = await find(emojis, prev.hash, discord_html.toString());
+
+  const updated = await find(old, prev.hash, discord_html.toString());
   
-  if (!updated) process.exit(0);
+  if (null === updated) (console.log('no changes'), process.exit(0));
+  if (updated === undefined) (console.log('couldn\'t find asset with emojis'), process.exit(1));
 
   execSync('git config --local user.name "github-actions[bot]"');
   writeFileSync('.npmrc', `//registry.npmjs.org/:_authToken=${process.env.NPM_TOKEN}`);
@@ -39,7 +40,10 @@ const JS_ASSET = /assets\/([\d\w]+.js)/g;
 const INLINED_EMOJIS_JSON = /JSON.parse\('({"people":[^']+})'\)}/;
 
 async function find(old, hash, html) {
+  console.log('old asset', hash);
+
   for (const [, asset] of html.matchAll(JS_ASSET)) {
+    console.log('new asset', asset);
     if (hash === asset) return null;
     html = await fetch(`https://canary.discord.com/assets/${asset}`);
 
@@ -56,6 +60,8 @@ async function find(old, hash, html) {
         for (const name of emoji.names) kv[name] = emoji.surrogates;
       }
     }
+
+    console.log(new Set(Object.values(kv)).size - new Set(Object.values(JSON.parse(readFileSync('./dist/kv.json')))).size, 'new emojis');
 
     writeFileSync('./dist/kv.json', JSON.stringify(kv));
     writeFileSync('./dist/emojis.json', JSON.stringify(emojis));

@@ -1,7 +1,7 @@
 {
   "license": "MIT",
   "private": false,
-  "version": "1.0.1",
+  "version": "1.0.2",
   "name": "@c4t/emojis",
   "main": "dist/index.js",
   "author": "devcat <cat@tsu.sh>",
